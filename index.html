@@ -2875,11 +2875,18 @@
         async function dbGet(key) {
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/app_data?key=eq.${key}&select=value`, {
-                    headers: { 'apikey': SUPABASE_KEY }
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
                 });
                 if (!res.ok) { console.error('dbGet error:', res.status, await res.text()); return null; }
                 const rows = await res.json();
-                return rows.length > 0 ? rows[0].value : null;
+                if (rows.length === 0) return null;
+                const v = rows[0].value;
+                // Supabase returns jsonb columns as already-parsed objects, text columns as strings.
+                // Always return a string so callers can JSON.parse consistently.
+                return typeof v === 'string' ? v : JSON.stringify(v);
             } catch (e) {
                 console.error('dbGet failed:', e);
                 return null;
@@ -2892,6 +2899,7 @@
                     method: 'POST',
                     headers: {
                         'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'resolution=merge-duplicates'
                     },
@@ -2906,23 +2914,25 @@
         async function loadAllData() {
             try {
                 const stateRaw = await dbGet('tracker-state');
+                console.log('[load] tracker-state:', stateRaw ? stateRaw.substring(0, 200) + '...' : 'null');
                 if (stateRaw) {
                     const state = JSON.parse(stateRaw);
                     completedExercises = state.completedExercises || {};
                     weightLog = state.weightLog || {};
                     completedWorkouts = state.completedWorkouts || {};
+                    console.log('[load] weightLog keys:', Object.keys(weightLog).length);
                     if (state.lastWorkout) {
                         localStorage.setItem('lastWorkout', JSON.stringify(state.lastWorkout));
                     }
                 }
-            } catch (e) {}
+            } catch (e) { console.error('[load] tracker-state parse failed:', e); }
 
             try {
                 const histRaw = await dbGet('tracker-history');
                 if (histRaw) {
                     localStorage.setItem('workoutHistory', histRaw);
                 }
-            } catch (e) {}
+            } catch (e) { console.error('[load] tracker-history failed:', e); }
         }
 
         function debouncedSaveState() {
