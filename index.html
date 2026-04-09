@@ -469,6 +469,87 @@
             background: rgba(248, 113, 113, 0.08);
         }
 
+        /* ─── MINI CALENDAR ─── */
+        .mini-calendar {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .mini-cal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .mini-cal-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: capitalize;
+            letter-spacing: 0.3px;
+        }
+        .mini-cal-nav {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .mini-cal-nav:hover {
+            color: var(--accent);
+            border-color: var(--border-accent);
+        }
+        .mini-cal-nav-group {
+            display: flex;
+            gap: 6px;
+        }
+        .mini-cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .mini-cal-dow {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding: 4px 0;
+            letter-spacing: 0.5px;
+        }
+        .mini-cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            position: relative;
+        }
+        .mini-cal-day.empty {
+            visibility: hidden;
+        }
+        .mini-cal-day.today {
+            border: 1px solid var(--border-accent);
+            color: var(--text-primary);
+        }
+        .mini-cal-day.done {
+            background: var(--accent);
+            color: var(--bg-primary);
+            font-weight: 700;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
         /* ─── WORKOUT TIMER (floating) ─── */
         /* ─── INLINE TIMERS ─── */
         .inline-timers {
@@ -2618,19 +2699,81 @@
             const arrow = document.getElementById('historyArrow');
             panel.classList.toggle('open');
             arrow.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                renderHistory();
+            }
+        }
+
+        let calendarViewDate = new Date();
+
+        function renderMiniCalendar(history) {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+
+            // Build set of YYYY-MM-DD strings where workouts were completed
+            const doneDays = new Set();
+            history.forEach(entry => {
+                const d = new Date(entry.date);
+                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                doneDays.add(key);
+            });
+
+            const firstOfMonth = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            // Make Monday = 0 (Polish convention)
+            let startDow = firstOfMonth.getDay() - 1;
+            if (startDow < 0) startDow = 6;
+
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+            const monthName = calendarViewDate.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+            const dowLabels = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
+
+            let html = `
+                <div class="mini-calendar" onclick="event.stopPropagation()">
+                    <div class="mini-cal-header">
+                        <div class="mini-cal-title">${monthName}</div>
+                        <div class="mini-cal-nav-group">
+                            <button class="mini-cal-nav" onclick="event.stopPropagation(); changeCalendarMonth(-1)">‹</button>
+                            <button class="mini-cal-nav" onclick="event.stopPropagation(); changeCalendarMonth(1)">›</button>
+                        </div>
+                    </div>
+                    <div class="mini-cal-grid">
+            `;
+            dowLabels.forEach(l => { html += `<div class="mini-cal-dow">${l}</div>`; });
+            for (let i = 0; i < startDow; i++) {
+                html += `<div class="mini-cal-day empty"></div>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const key = `${year}-${month}-${day}`;
+                const classes = ['mini-cal-day'];
+                if (doneDays.has(key)) classes.push('done');
+                if (isCurrentMonth && day === today.getDate()) classes.push('today');
+                html += `<div class="${classes.join(' ')}">${day}</div>`;
+            }
+            html += `</div></div>`;
+            return html;
+        }
+
+        function changeCalendarMonth(delta) {
+            calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + delta, 1);
+            renderHistory();
         }
 
         function renderHistory() {
             const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
             const container = document.getElementById('historyContent');
-            
+
+            const calendarHtml = renderMiniCalendar(history);
+
             if (history.length === 0) {
-                container.innerHTML = '<div class="history-empty">Brak ukończonych treningów</div>';
+                container.innerHTML = calendarHtml + '<div class="history-empty">Brak ukończonych treningów</div>';
                 return;
             }
-            
+
             // Show most recent first, track original index
-            let html = '';
+            let html = calendarHtml;
             for (let i = history.length - 1; i >= 0; i--) {
                 const entry = history[i];
                 const d = new Date(entry.date);
