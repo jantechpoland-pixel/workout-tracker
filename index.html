@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -11,86 +11,177 @@
 <title>Workout Focus</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
+</head>
+<body>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
+/* One-column phone app, dark gym look: ink ground, mint accent, mono for numbers. */
+:root{
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+  --bg:#0a0a0f; --card:#13131a; --raise:#1e1e2a; --fg:#f0f0f5; --muted:#8888a0; --faint:#55556a;
+  --line:rgba(255,255,255,0.06); --line2:rgba(255,255,255,0.08);
+  --mint:#6ee7b7; --mint-bg:rgba(110,231,183,0.12); --mint-line:rgba(110,231,183,0.3); --violet:#818cf8; --amber:#fbbf24; --orange:#fb923c; --red:#f87171;
+  --sans:'Outfit',system-ui,-apple-system,sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  background:var(--bg);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Outfit',sans-serif;background:#0a0a0f;color:#f0f0f5;min-height:100vh;-webkit-text-size-adjust:100%;touch-action:manipulation;-webkit-font-smoothing:antialiased}
-button{font-family:'Outfit',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.mono{font-family:'JetBrains Mono',monospace}
-.app{min-height:100vh;min-height:100dvh;max-width:420px;margin:0 auto;display:flex;flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom))}
-.card{background:#13131a;border:1px solid rgba(255,255,255,0.06);border-radius:20px}
-.pill{font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#6ee7b7;background:rgba(110,231,183,0.15);padding:5px 14px;border-radius:50px;display:inline-block}
+body{font-family:var(--sans);background:var(--bg);color:var(--fg);-webkit-text-size-adjust:100%;touch-action:manipulation;-webkit-font-smoothing:antialiased}
+button,input,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.app{min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));max-width:420px;margin:0 auto;display:flex;flex-direction:column;padding-block:20px 24px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px}
+.pill{font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--mint);background:rgba(110,231,183,0.15);padding:5px 14px;border-radius:50px;display:inline-block}
+.seg{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;width:100%}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.5px}
+.seg button.on{background:var(--mint-bg);color:var(--mint)}
 .tabs{display:flex;gap:8px;width:100%}
-.tab{flex:1;padding:12px 8px;border-radius:14px;text-align:center;transition:all .25s ease;background:#13131a;color:#8888a0;border:1px solid rgba(255,255,255,0.06)}
-.tab.on{background:rgba(110,231,183,0.12);color:#6ee7b7;border-color:rgba(110,231,183,0.35)}
-.tab b{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:800;display:block}
+.tab{flex:1;padding:12px 8px;border-radius:14px;text-align:center;transition:all .25s ease;background:var(--card);color:var(--muted);border:1px solid var(--line)}
+.tab.on{background:var(--mint-bg);color:var(--mint);border-color:rgba(110,231,183,0.35)}
+.tab b{font-family:var(--mono);font-size:19px;font-weight:800;display:block}
 .tab i{font-style:normal;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.75;display:block;margin-top:2px}
-.btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,rgba(110,231,183,0.18),rgba(110,231,183,0.08));color:#6ee7b7;border:1px solid rgba(110,231,183,0.3);border-radius:16px;font-size:16px;font-weight:700}
-.btn-main{width:100%;padding:20px;background:linear-gradient(135deg,rgba(110,231,183,0.16),rgba(110,231,183,0.07));color:#6ee7b7;border:1px solid rgba(110,231,183,0.3);border-radius:20px;font-size:17px;font-weight:700;letter-spacing:.2px}
-.btn-ghost{width:100%;padding:16px;background:transparent;color:#8888a0;border:1px solid rgba(255,255,255,0.08);border-radius:16px;font-size:15px;font-weight:600}
-.nav{width:44px;height:44px;border-radius:50%;background:#13131a;border:1px solid rgba(255,255,255,0.08);color:#8888a0;font-size:20px;display:flex;align-items:center;justify-content:center;padding-bottom:2px}
+.weeks{display:flex;align-items:center;gap:6px;width:100%}
+.weeks .lbl{margin-right:auto}
+.wk{width:38px;height:32px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:13px;font-weight:700}
+.wk.on{background:var(--mint-bg);color:var(--mint);border-color:var(--mint-line)}
+.wk-icon{display:flex;align-items:center;justify-content:center;margin-left:6px}
+.res td.rv{text-align:center;font-size:13px;font-weight:700;padding:10px 2px;width:44px;min-width:44px}
+.res .exrow{display:flex;align-items:baseline;gap:6px}
+.res .exrow .c{margin-right:0}
+.res .ti{display:inline-block;width:12px;flex-shrink:0;font-size:14px;font-weight:700;text-align:center}
+.btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,rgba(110,231,183,0.18),rgba(110,231,183,0.08));color:var(--mint);border:1px solid var(--mint-line);border-radius:16px;font-size:16px;font-weight:700}
+.btn-main{width:100%;padding:20px;background:linear-gradient(135deg,rgba(110,231,183,0.16),rgba(110,231,183,0.07));color:var(--mint);border:1px solid var(--mint-line);border-radius:20px;font-size:17px;font-weight:700;letter-spacing:.2px}
+.btn-ghost{width:100%;padding:16px;background:transparent;color:var(--muted);border:1px solid var(--line2);border-radius:16px;font-size:15px;font-weight:600}
+.btn-link{background:transparent;border:none;color:var(--faint);font-size:12.5px;font-weight:600;padding:4px}
+.nav{width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--line2);color:var(--muted);font-size:20px;display:flex;align-items:center;justify-content:center;padding-bottom:2px}
 .nav.off{color:#2a2a38}
-.lbl{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#55556a}
-.stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:12px 8px;border-radius:14px;text-align:center}
-.stat .k{font-size:10px;color:#55556a;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.stat .v{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#f0f0f5}
-.stepbtn{width:38px;height:38px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center}
+.lbl{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+.stat{background:rgba(255,255,255,0.03);border:1px solid var(--line);padding:12px 8px;border-radius:14px;text-align:center;min-width:0}
+.stat .k{font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat .v{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--fg);overflow-wrap:anywhere}
+.stepbtn{width:40px;height:40px;border-radius:50%;font-size:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stepbtn.minus{background:var(--raise);border:1px solid var(--line2);color:var(--muted)}
+.stepbtn.plus{background:rgba(110,231,183,0.1);border:1px solid var(--mint-line);color:var(--mint)}
+.kgin{width:84px;background:transparent;border:1px dashed transparent;border-radius:10px;text-align:center;font-family:var(--mono);font-size:19px;font-weight:700;color:var(--mint);padding:6px 2px}
+.kgin:focus{border-color:var(--mint-line);background:rgba(110,231,183,0.06);outline:none}
+.kgin::placeholder{color:var(--faint)}
+.wbox{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:14px;padding:10px 12px;width:100%}
+.notein{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--fg)}
+.notein::placeholder{color:var(--faint)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);background:var(--card);border:1px solid var(--line2);border-radius:50px;padding:6px 12px;text-decoration:none}
+.chip.on{color:var(--mint);border-color:var(--mint-line)}
 .progress{background:rgba(255,255,255,0.05);height:5px;border-radius:3px;overflow:hidden}
-.progress>div{height:100%;border-radius:3px;background:linear-gradient(90deg,#6ee7b7,#818cf8);transition:width .5s cubic-bezier(.4,0,.2,1)}
+.progress>div{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--mint),var(--violet));transition:width .5s cubic-bezier(.4,0,.2,1)}
+.photo{width:100%;height:auto;max-width:100%;border-radius:14px;display:block;background:#000}
+.chip[disabled]{opacity:.6}
+/* workout: one card per exercise in the block */
+.exc{padding:14px;display:flex;flex-direction:column;gap:12px}
+.exc .code{font-size:11px;font-weight:700;color:var(--mint);background:var(--mint-bg);padding:3px 9px;border-radius:50px;flex-shrink:0;margin-top:2px}
+.exn{font-size:18px;font-weight:800;line-height:1.2;letter-spacing:-0.2px;text-wrap:balance}
+.meta{font-size:13px;color:var(--muted)}
+.meta b{color:var(--mint);font-family:var(--mono);font-weight:700}
+.hint{font-size:11.5px;color:var(--faint)}
+.rpe{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px 3px 7px;border-radius:50px;border:1px solid var(--line2);color:var(--fg);line-height:1.2;white-space:nowrap}
+.rpe svg{color:var(--muted)}
+.rpe b{font-family:var(--mono);font-weight:700;font-size:12.5px}
+.rpe span{color:var(--muted);font-weight:500}
+.prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:10px;width:100%;padding:11px 14px;background:transparent;border:none;border-top:1px solid var(--line);text-align:left;color:var(--fg)}
+.prow:first-child{border-top:none}
+.prow .c{font-size:10.5px;font-weight:700;color:var(--mint)}
+.pn{font-size:13px;font-weight:600;line-height:1.25;min-width:0}
+.pn small{display:block;font-size:10.5px;color:var(--faint);font-weight:500;margin-top:3px;font-family:var(--mono)}
+.pv{text-align:right;font-size:15px;font-weight:700;min-width:54px}
+.pv small{font-size:9px;color:var(--faint);margin-left:2px}
+.delta{display:block;font-size:10.5px;font-weight:700;margin-top:2px;white-space:nowrap}
+
+.wrow{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:14px;padding:8px 10px}
+.sets{display:flex;flex-direction:column;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:14px;padding:4px 10px}
+.sets-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0 4px;flex-wrap:wrap}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid var(--line)}
+.srow .sn{font-size:13px;font-weight:600;color:var(--muted);line-height:1.2}
+.srow .sn{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:2px;min-width:0}
+.srow .sn small{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--mint)}
+.tbadge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px 3px 7px;border-radius:50px;border:1px solid var(--line2);color:var(--fg);line-height:1.2;white-space:nowrap;font-family:var(--mono)}
+.tbadge svg{color:var(--muted)}
+.srow .kgin{width:56px;font-size:16px;padding:4px 2px;text-align:right}
+.srow .unit{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--faint);margin:0 2px 0 -2px}
+.srow .stepbtn{width:32px;height:32px;font-size:16px}
+.restbtn{width:100%;padding:12px;border-radius:14px;background:var(--card);border:1px solid var(--line2);color:var(--muted);font-size:14px;font-weight:600}
+.restbtn.on{color:var(--amber);border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.06)}
+/* Wyniki table */
+.res{width:100%;border-collapse:collapse;font-size:12.5px}
+.res th{font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);padding:6px 2px 8px;text-align:center;white-space:nowrap}
+.res th:first-child{text-align:left;padding-left:16px}
+.res th.cur{color:var(--mint)}
+.res td{border-top:1px solid var(--line);padding:4px 2px;vertical-align:middle}
+.res td.ex{padding:9px 4px 9px 14px;font-weight:600;line-height:1.25;min-width:96px}
+.res td.ex .c{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--mint);margin-right:6px}
+.res td:last-child{padding-right:10px}
+.cell{width:100%;min-width:44px;height:40px;border-radius:10px;border:1px solid transparent;background:transparent;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.cell.cur{background:rgba(110,231,183,0.06);border-color:rgba(110,231,183,0.18)}
+.cell.empty{color:#2e2e3e;font-weight:400;font-size:16px}
+.cell .n{font-size:9px;color:var(--amber);font-family:var(--sans);font-weight:600;letter-spacing:.5px}
+.cell .kg{font-size:9px;color:var(--faint);font-weight:600}
+/* edit sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:420px;margin:0 auto;background:var(--card);border:1px solid var(--line2);border-bottom:none;border-radius:22px 22px 0 0;padding:18px max(22px,env(safe-area-inset-right,0px)) max(22px,env(safe-area-inset-bottom,0px)) max(22px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.sheet textarea{min-height:64px;resize:vertical}
 @keyframes restPulse{0%,100%{opacity:1}50%{opacity:.55}}
 @keyframes figBob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
 .fig-anim{animation:figBob 3.2s ease-in-out infinite;transform-origin:60px 60px;transform-box:fill-box}
+.pulse{animation:restPulse 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.fig-anim,.pulse{animation:none!important}.progress>div{transition:none}}
 </style>
-</head>
-<body>
 <div id="root" class="app"></div>
 <script>
-/* ═══ KONFIGURACJA — patrz SETUP.md ═══ */
-const SUPABASE_URL = 'https://ymowelnxdgrhikuvxpdh.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_vBDYrPGZQ4VFcFgBXAnj5A_bABKagFu';
-const SYNC_KEY = 'ffa5a5547543a7576cce3e7136b3086e9a43519cbaccef31';
-/* ═════════════════════════════════════ */
+/* Workout Focus, wersja artefaktowa.
+   Plany: Trening 1/3, 2/3, 3/3 (wartości z niebieskich poprawek trenera).
+   Wyniki: ciężar + notatka na ćwiczenie i tydzień (1-4), jak w arkuszu "Wyniki".
+   Dane: baza artefaktu (synchronizacja między urządzeniami, tylko właściciel)
+   + lokalna kopia w przeglądarce, więc działa też offline. */
 
 const PLANS = [
- {title:'Siła — całe ciało',tag:'Siła',hero:'squat',W:[
-  {code:'A1',name:'Heavy back squat',sets:3,reps:'3',tempo:'3010',weight:'80 kg',rest:0},
-  {code:'A2',name:'Lateral squat hold',sets:3,reps:'10 s + 5',tempo:'X!',weight:'16 kg KB',rest:120},
-  {code:'B1',name:'RDL',sets:3,reps:'6',tempo:'30X0',weight:'80 kg',rest:0},
-  {code:'B2',name:'Kopenhadzkie przywodzenie',sets:3,reps:'20 s / str.',tempo:'2010',weight:'—',rest:120},
-  {code:'C1',name:'Podciąganie',sets:3,reps:'max',tempo:'2010',weight:'—',rest:0},
-  {code:'C2',name:'Pompki',sets:3,reps:'10',tempo:'20X0',weight:'—',rest:90},
-  {code:'D1',name:'Wyciskanie z rotacją',sets:3,reps:'6',tempo:'20X0',weight:'—',rest:0},
-  {code:'D2',name:'DB pullover',sets:3,reps:'6',tempo:'20X0',weight:'—',rest:90},
-  {code:'E1',name:'Rzuty piłką lekarską',sets:3,reps:'5/5/5/5',tempo:'X!',weight:'—',rest:30},
-  {code:'F1',name:'Reverse crunch',sets:2,reps:'10',tempo:'2010',weight:'—',rest:0},
-  {code:'F2',name:'Russian twist',sets:2,reps:'30 s',tempo:'szybkie',weight:'—',rest:60}]},
- {title:'Nogi + góra — push',tag:'Push',hero:'lunge',W:[
-  {code:'A1',name:'Bulgarian split squat',sets:3,reps:'4',tempo:'40X0',weight:'—',rest:0},
-  {code:'A2',name:'Wyskoki na przedniej nodze',sets:3,reps:'4',tempo:'X!',weight:'—',rest:120},
-  {code:'B1',name:'Leg curl',sets:3,reps:'6',tempo:'40X0',weight:'—',rest:0},
-  {code:'B2',name:'Hip thrust jednonóż',sets:3,reps:'6',tempo:'20X0',weight:'—',rest:120},
-  {code:'C1',name:'Wyciskanie na ławce dodatniej',sets:3,reps:'6',tempo:'20X0',weight:'—',rest:0},
-  {code:'C2',name:'MB slams zza głowy z rotacją',sets:3,reps:'5',tempo:'X!',weight:'—',rest:90},
-  {code:'D1',name:'OHP na sztandze',sets:3,reps:'6',tempo:'2011',weight:'—',rest:0},
-  {code:'D2',name:'Lateral raises',sets:3,reps:'6',tempo:'2011',weight:'—',rest:90},
-  {code:'E1',name:'Łapki 1 — biceps curls',sets:2,reps:'10',tempo:'szybkie',weight:'—',rest:0},
-  {code:'E2',name:'Łapki 2 — triceps ext.',sets:2,reps:'10–15',tempo:'szybkie',weight:'—',rest:90},
-  {code:'F1',name:'Sit up + talerz nad głowę',sets:2,reps:'10',tempo:'wolne',weight:'—',rest:0},
-  {code:'F2',name:'Plank + hip dips',sets:2,reps:'30 s',tempo:'umiarkowane',weight:'—',rest:60}]},
- {title:'Hinge + plecy',tag:'Plecy',hero:'hinge',W:[
-  {code:'A1',name:'TB DL',sets:3,reps:'4',tempo:'20X0',weight:'—',rest:0},
-  {code:'A2',name:'Łydki 2/1 — Smith',sets:3,reps:'8 / str.',tempo:'2010',weight:'—',rest:120},
-  {code:'B1',name:'Lateral drop + knee drive',sets:3,reps:'6',tempo:'X',weight:'—',rest:0},
-  {code:'B2',name:'Leg switches',sets:3,reps:'5 / str.',tempo:'X!',weight:'—',rest:120},
-  {code:'C1',name:'LAT pulldown z pauzą u dołu',sets:3,reps:'6',tempo:'2012',weight:'—',rest:0},
-  {code:'C2',name:'Y-T-A raises',sets:3,reps:'5',tempo:'2011',weight:'—',rest:90},
-  {code:'D1',name:'Rozpiętki',sets:3,reps:'8',tempo:'2111',weight:'—',rest:0},
-  {code:'D2',name:'Seated row',sets:3,reps:'8',tempo:'2012',weight:'—',rest:90},
-  {code:'E1',name:'Dead bug',sets:2,reps:'30 s',tempo:'wolne',weight:'—',rest:0},
-  {code:'E2',name:'Nożyce pionowe',sets:2,reps:'30 s',tempo:'szybkie',weight:'—',rest:0},
-  {code:'E3',name:'Plank + arm reach',sets:2,reps:'30 s',tempo:'wolne',weight:'—',rest:60}]}
+ {title:'Trening 1/3', sub:'Split squat · RDL · pompki · LAT', tag:'Split', hero:'lunge', W:[
+  {code:'A1',name:'Split squat',sets:4,reps:'6',rpe:'8',tempo:'40X0',rest:0,load:1,img:'t1-a1.jpg'},
+  {code:'A2',name:'Przeskoki zakroczne z piłką z rotacją',sets:4,reps:'6 / noga',rpe:'9',tempo:'X!',rest:120,load:1,video:'https://www.youtube.com/watch?v=iXYZfJRhQj0'},
+  {code:'B1',name:'RDL',sets:4,reps:'3 dyn. + 3 wolne',rpe:'9',tempo:'40X0',rest:0,load:1,img:'t1-b1.jpg'},
+  {code:'B2',name:'Glute bridge jump to opposite leg hamstring catch',sets:3,reps:'8 / noga',rpe:'8',tempo:'X!',rest:120,video:'https://www.youtube.com/shorts/XcgFvSb3aMk'},
+  {code:'C1',name:'Pompka iso hold',sets:3,reps:'30 s',rpe:'8',tempo:'',rest:0,load:1,note:'Śmiało ładuj talerz 10 lub 5 kg na plecy',img:'t1-c1.jpg'},
+  {code:'C2',name:'Pompka dynamicznie',sets:3,reps:'8',rpe:'9',tempo:'X!',rest:120},
+  {code:'D1',name:'LAT pulldown szeroko, hold',sets:3,reps:'30 s',rpe:'8',tempo:'',rest:0,load:1,img:'t1-d1.jpg'},
+  {code:'D2',name:'LAT pulldown szeroko, dynamicznie',sets:3,reps:'8',rpe:'9',tempo:'X!',rest:120,load:1,img:'t1-d2.jpg'},
+  {code:'E1',name:'Biceps iso, druga ręka pracuje',sets:3,min:2,reps:'10/5/3/1',rpe:'8/9',tempo:'2121',rest:30,load:1,video:'https://www.youtube.com/shorts/FDo1oByD58M'},
+  {code:'E2',name:'Triceps w leżeniu',sets:3,min:2,reps:'10',rpe:'8',tempo:'2121',rest:120,load:1,img:'t1-e2.jpg'},
+  {code:'F1',name:'Spięcia brzucha w leżeniu tyłem',sets:3,min:2,reps:'30 s',rpe:'8',tempo:'X!',rest:0,img:'t1-f1.jpg'},
+  {code:'F2',name:'Hollow body',sets:3,min:2,reps:'10–15 s',rpe:'10',tempo:'',rest:60,img:'t1-f2.jpg'}]},
+ {title:'Trening 2/3', sub:'Lateral squat · hip thrust · DB press', tag:'Hip thrust', hero:'squat', W:[
+  {code:'A1',name:'Lateral drop squat',sets:4,reps:'6 / noga',rpe:'8',tempo:'X!',rest:0,load:1,video:'https://www.youtube.com/shorts/uA4JUfx4ut4'},
+  {code:'A2',name:'Zeskok ze skrzyni + lądowanie do boku',sets:4,reps:'6 / strona',rpe:'7',tempo:'X!',rest:120,video:'https://www.youtube.com/watch?v=suWbBmmvd6M'},
+  {code:'B1',name:'Hip thrust, overcoming iso na długiej dźwigni',sets:4,reps:'3 × 3 s',rpe:'10',tempo:'',rest:0,load:1,note:'Napierasz na maxa na sztangę',img:'t2-b1.jpg'},
+  {code:'B2',name:'Hip thrust dynamicznie',sets:4,reps:'4 wolno + 4 dyn.',rpe:'9',tempo:'X!',rest:120,load:1,img:'t2-b2.jpg'},
+  {code:'C1',name:'Alternating narrow grip DB bench press',sets:3,reps:'8 / ręka',rpe:'9',tempo:'2111',rest:0,load:1,video:'https://www.youtube.com/watch?v=wOa4YyxyiKI'},
+  {code:'C2',name:'DB pullover',sets:3,reps:'8',rpe:'9',tempo:'2111',rest:120,load:1,video:'https://www.youtube.com/watch?v=EVZmzxqDaKc'},
+  {code:'D1',name:'Łapki 1, biceps',sets:3,reps:'8/6/4/2',rpe:'8',tempo:'2111',rest:0,load:1,img:'t2-d1.jpg'},
+  {code:'D2',name:'Łapki 2, triceps',sets:3,reps:'8/6/4/2',rpe:'9',tempo:'2111',rest:120,load:1,img:'t2-d2.jpg'},
+  {code:'E1',name:'Crunches',sets:3,min:2,reps:'30 s',rpe:'7',tempo:'umiarkowane',rest:0,img:'t2-e1.jpg'},
+  {code:'E2',name:'Reverse crunches',sets:3,min:2,reps:'30 s',rpe:'8',tempo:'umiarkowane',rest:60,img:'t2-e2.jpg'}]},
+ {title:'Trening 3/3', sub:'Moc + bieganie w akwarium ×3', tag:'Moc', hero:'hinge', W:[
+  {code:'A1',name:'Split squat drop and catch',sets:4,reps:'4 / noga',rpe:'9',tempo:'X!',rest:0,load:1},
+  {code:'A2',name:'Box jumps + zeskok z lądowaniem do boku',sets:4,reps:'4 / strona',rpe:'8',tempo:'X!',rest:120},
+  {code:'B1',name:'Trap bar DL',sets:4,reps:'5',rpe:'10',tempo:'X!',rest:0,load:1},
+  {code:'B2',name:'Hamstring swimming',sets:4,reps:'20 s',rpe:'10',tempo:'X!',rest:120,note:'Tylko jak najszybciej przez 20 s',video:'https://www.youtube.com/watch?v=LtTcXXgeRYo'},
+  {code:'C1',name:'Wyrzuty piłki lekarskiej sprzed klatki',sets:3,reps:'10',rpe:'8',tempo:'X!',rest:0,load:1,video:'https://www.youtube.com/shorts/AZtKnqxzC-E'},
+  {code:'C2',name:'MB slam w podłogę z rotacją',sets:3,reps:'6 / strona',rpe:'8',tempo:'X!',rest:120,load:1,video:'https://youtube.com/shorts/39Hs3CdJMcA'},
+  {code:'W1',block:'W',name:'Bieg przodem + powrót tyłem',sets:3,reps:'4 długości',rpe:'',tempo:'',rest:0,note:'Cała długość akwarium'},
+  {code:'W2',block:'W',name:'Przeskoki nożycowe w miejscu + sprint',sets:3,reps:'4 długości',rpe:'',tempo:'',rest:0,video:'https://www.youtube.com/watch?v=5VlnYBz64Pg'},
+  {code:'W3',block:'W',name:'Krok skrzyżny do boku + sprint',sets:3,reps:'6× / noga',rpe:'',tempo:'',rest:0},
+  {code:'W4',block:'W',name:'Skip z zatrzymaniem i lekką sztangą',sets:3,reps:'4 długości',rpe:'',tempo:'',rest:60,note:'Z dodatkowym przeskokiem na nodze',video:'https://www.youtube.com/watch?v=i_HPCUBv7aw'},
+  {code:'W5',block:'W',name:'Skip normalny z lekką sztangą',sets:3,reps:'4 długości',rpe:'',tempo:'',rest:240,video:'https://www.youtube.com/watch?v=i_HPCUBv7aw'}]}
 ];
+const BLOCK_NAME = { W:'W akwarium' };
+const WEEKS = [1,2,3,4];
 
 const FIGS = {
  squat:{h:[58,34],p:['M56 42 Q51 52 49 62','M49 62 L70 70','M70 70 L66 100','M53 47 L79 42'],d:['M14 100 H106']},
@@ -98,74 +189,135 @@ const FIGS = {
  hinge:{h:[76,40],p:['M70 45 L48 58','M48 58 L46 100','M66 50 L62 76'],d:['M14 100 H106','M46 78 H80']}
 };
 
-/* ─── storage (offline-first) ─── */
-const load = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch(e){ return f; } };
-const persist = () => { localStorage.setItem('fw2_store', JSON.stringify(store)); localStorage.setItem('fw2_queue', JSON.stringify(queue)); };
-let store = load('fw2_store', { weights:{}, history:[], wlog:{} });
-let queue = load('fw2_queue', []);
+/* ─── storage: lokalna kopia + baza artefaktu ─── */
+const SKEY = 'wf3_store';
+function loadStore() {
+  const base = { week:1, res:{}, history:[], media:{}, dirty:[], dirtyH:[], dirtyWeek:false, synced:false };
+  try { const s = JSON.parse(localStorage.getItem(SKEY)); if (s && s.res) return Object.assign(base, s); } catch(e){}
+  return base;
+}
+let store = loadStore();
+const persist = () => { try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch(e){} };
+const SEED_INIT = {"week": 2, "res": {"0|A1": {"1": {"kg": 40, "note": "ze sztangą"}}, "0|A2": {"1": {"kg": 8, "note": "piłka lekarska"}}, "0|B1": {"1": {"kg": 70, "note": "ze sztangą"}}, "0|B2": {"1": {"note": "Completed not sure if good technique"}}, "0|C1": {"1": {"kg": 15, "note": "talerz"}}, "0|D1": {"1": {"kg": 42.5}}, "0|D2": {"1": {"kg": 42.5}}, "0|E1": {"1": {"kg": 7.5}}, "0|E2": {"1": {"kg": 20}}, "1|A1": {"1": {"kg": 12.5}}, "1|A2": {"1": {"note": "Skrzynia dress is a"}}, "1|B1": {"1": {"kg": 40}}, "1|B2": {"1": {"kg": 60}}}};
+if (!Object.keys(store.res).length && !store.history.length) { store.week = SEED_INIT.week; store.res = JSON.parse(JSON.stringify(SEED_INIT.res)); persist(); }
 
-/* ─── supabase sync ─── */
-const configured = SUPABASE_URL && SUPABASE_ANON_KEY && SYNC_KEY;
-const db = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-let syncState = configured ? 'sync' : 'off'; // sync | ok | err | off
-let flushing = false;
+let DB = null, ASSETS = null, syncState = 'local', flushing = false;
+const docId = key => key.replace('|', '-');
+const hasDirty = () => store.dirty.length || store.dirtyH.length || store.dirtyWeek;
+function setSync(s) { syncState = s; renderSyncDot(); }
+function markDirty(key) { if (!store.dirty.includes(key)) store.dirty.push(key); persist(); flush(); }
 
 async function flush() {
-  if (!db || flushing || !navigator.onLine || !queue.length) { renderSyncDot(); return; }
-  flushing = true; syncState = 'sync'; renderSyncDot();
+  if (!DB || flushing || !hasDirty()) return;
+  flushing = true; setSync('sync');
   try {
-    while (queue.length) {
-      const op = queue[0];
-      let r;
-      if (op.t === 'weight') r = await db.from('weights').upsert({ sync_key: SYNC_KEY, key: op.key, w: op.w, updated_at: new Date(op.ts).toISOString() });
-      else if (op.t === 'wlog') r = await db.from('weight_log').insert({ sync_key: SYNC_KEY, key: op.key, t: new Date(op.ts).toISOString(), w: op.w });
-      else if (op.t === 'workout') r = await db.from('workouts').insert({ sync_key: SYNC_KEY, t: new Date(op.ts).toISOString(), plan: op.plan, secs: op.secs, sets: op.sets });
-      if (r && r.error) throw r.error;
-      queue.shift(); persist();
+    while (store.dirty.length) {
+      const key = store.dirty[0], body = JSON.stringify(store.res[key] || {});
+      const ref = DB.doc('results/' + docId(key));
+      if (body !== '{}') await ref.set({ key, weeks:JSON.parse(body) }); else await ref.delete();
+      if (JSON.stringify(store.res[key] || {}) === body) { store.dirty.shift(); persist(); }
     }
-    syncState = 'ok';
-  } catch(e) { console.warn('sync err', e); syncState = 'err'; }
-  flushing = false; renderSyncDot();
+    while (store.dirtyH.length) {
+      const t = store.dirtyH[0], e = store.history.find(x => x.t === t);
+      if (e) await DB.doc('history/' + t).set(Object.assign({}, e));
+      store.dirtyH.shift(); persist();
+    }
+    if (store.dirtyWeek) {
+      const w = store.week;
+      await DB.doc('app/settings').set({ week:w });
+      if (store.week === w) { store.dirtyWeek = false; persist(); }
+    }
+    setSync('ok');
+  } catch(e) { setSync(e && e.code === 'quota_exceeded' ? 'full' : 'offline'); }
+  flushing = false;
 }
+setInterval(() => { if (hasDirty()) flush(); }, 20000);
+window.addEventListener('online', () => flush());
 
-async function pull() {
-  if (!db || !navigator.onLine) return;
-  try {
-    const pendingW = new Set(queue.filter(o => o.t === 'weight').map(o => o.key));
-    const [w, h, l] = await Promise.all([
-      db.from('weights').select('key,w').eq('sync_key', SYNC_KEY),
-      db.from('workouts').select('t,plan,secs,sets').eq('sync_key', SYNC_KEY).order('t', { ascending:false }).limit(50),
-      db.from('weight_log').select('key,t,w').eq('sync_key', SYNC_KEY).order('t', { ascending:true }).limit(1000)
-    ]);
-    if (w.data) w.data.forEach(r => { if (!pendingW.has(r.key)) store.weights[r.key] = +r.w; });
-    if (h.data) {
-      const seen = new Set(store.history.map(e => e.t));
-      h.data.forEach(r => { const t = +new Date(r.t); if (!seen.has(t)) store.history.push({ t, plan:r.plan, secs:r.secs, sets:r.sets }); });
-      store.history.sort((a,b) => b.t - a.t); store.history = store.history.slice(0,50);
-    }
-    if (l.data) {
-      l.data.forEach(r => {
-        const arr = store.wlog[r.key] || (store.wlog[r.key] = []);
-        const t = +new Date(r.t);
-        if (!arr.some(x => x.t === t)) arr.push({ t, w:+r.w });
+async function connect() {
+  let db = null;
+  try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch(e) {}
+  if (!db) { setSync('local'); return; }
+  DB = db; setSync('sync');
+  if (!store.synced) store.history.forEach(e => { if (!store.dirtyH.includes(e.t)) store.dirtyH.push(e.t); });
+  const timer = setTimeout(() => { if (syncState === 'sync') setSync('offline'); }, 10000);
+
+  db.collection('results').onSnapshot(snap => {
+    const fresh = !snap.metadata.fromCache, next = {};
+    snap.docs.forEach(d => { const v = d.data(); if (v && v.key && v.weeks) next[v.key] = JSON.parse(JSON.stringify(v.weeks)); });
+    if (fresh && !store.synced) {
+      /* pierwsza synchronizacja: wyślij wpisy z tej przeglądarki, których baza nie ma (lub są nowsze) */
+      Object.keys(store.res).forEach(key => {
+        const loc = store.res[key] || {}, merged = Object.assign({}, next[key] || {});
+        let changed = false;
+        Object.keys(loc).forEach(w => { const r = merged[w]; if (!r || (loc[w].t || 0) > (r.t || 0)) { merged[w] = loc[w]; changed = true; } });
+        if (changed) { store.res[key] = merged; if (!store.dirty.includes(key)) store.dirty.push(key); }
       });
-      Object.values(store.wlog).forEach(a => a.sort((x,y) => x.t - y.t));
+      store.synced = true;
     }
-    persist(); syncState = queue.length ? 'sync' : 'ok';
-    if (S.screen === 'home') render();
-  } catch(e) { console.warn('pull err', e); syncState = 'err'; renderSyncDot(); }
+    store.dirty.forEach(key => { if (store.res[key]) next[key] = store.res[key]; else delete next[key]; });
+    store.res = next; persist();
+    if (fresh) { clearTimeout(timer); if (!flushing) setSync(hasDirty() ? 'sync' : 'ok'); flush(); }
+    softRender();
+  }, () => { clearTimeout(timer); setSync('offline'); });
+
+  db.collection('history').orderBy('t', 'desc').limit(50).onSnapshot(snap => {
+    const remote = snap.docs.map(d => Object.assign({}, d.data())).filter(e => e.t);
+    const seen = new Set(remote.map(e => e.t));
+    const local = store.history.filter(e => store.dirtyH.includes(e.t) && !seen.has(e.t));
+    store.history = remote.concat(local).sort((a,b) => b.t - a.t).slice(0,50);
+    persist(); softRender();
+  }, () => {});
+
+  /* własne wideo / zdjęcia ćwiczeń: plik w magazynie artefaktu, wskaźnik w bazie */
+  db.collection('media').onSnapshot(snap => {
+    const m = {};
+    snap.docs.forEach(d => { const v = d.data(); if (v && v.key && v.id) m[v.key] = { id:v.id, type:v.type || 'video' }; });
+    store.media = m; persist(); softRender();
+  }, () => {});
+
+  db.doc('app/settings').onSnapshot(s => {
+    if (!s.exists || store.dirtyWeek) return;
+    const w = s.data().week;
+    if (WEEKS.includes(w) && w !== store.week) { store.week = w; persist(); softRender(); }
+  }, () => {});
 }
 
-window.addEventListener('online', flush);
-setInterval(() => { if (queue.length) flush(); }, 30000);
+/* nie przerysowuj, gdy ktoś właśnie wpisuje wartość */
+let renderPending = false;
+function softRender() {
+  const a = document.activeElement;
+  if (S.edit || (a && /INPUT|TEXTAREA/.test(a.tagName))) { renderPending = true; return; }
+  render();
+}
+document.addEventListener('focusout', () => {
+  if (!renderPending) return;
+  setTimeout(() => { const a = document.activeElement; if (!S.edit && !(a && /INPUT|TEXTAREA/.test(a.tagName))) { renderPending = false; render(); } }, 0);
+});
+
+const rkey = (p, code) => p + '|' + code;
+const getR = (key, w) => (store.res[key] || {})[w] || null;
+function prevKg(key, w) { for (let i = w; i >= 1; i--) { const r = getR(key, i); if (r && r.kg != null) return { kg:r.kg, week:i }; } return null; }
+function setR(key, w, patch) {
+  const m = store.res[key] || (store.res[key] = {});
+  const r = Object.assign({}, m[w] || {}, patch, { t:Date.now() });
+  if (r.kg == null) delete r.kg;
+  if (!r.note) delete r.note;
+  if (!r.sets || !r.sets.some(v => v != null)) delete r.sets;
+  if (r.kg == null && !r.note) delete m[w]; else m[w] = r;
+  if (!Object.keys(m).length) delete store.res[key];
+  markDirty(key);
+}
+const parseKg = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null; };
 
 /* ─── app state ─── */
-const S = { screen:'home', plan:0, stepI:0, doneSets:0, restLeft:0, restTotal:0, elapsed:0 };
+const S = { screen:'home', view:'plan', /* widok Wyniki ukryty na razie (wynikiCard zostaje na później) */ plan:0, blockI:0, doneBlocks:0, doneSets:0, restLeft:0, restTotal:0, elapsed:0, img:null, showW:{}, edit:null };
 const stepsCache = {};
+const groupOf = e => e.block || e.code[0];
 function STEPS(plan) {
   if (stepsCache[plan]) return stepsCache[plan];
   const W = PLANS[plan].W, groups = [];
-  W.forEach((e,i) => { const L = e.code[0], g = groups[groups.length-1];
+  W.forEach((e,i) => { const L = groupOf(e), g = groups[groups.length-1];
     if (g && g.letter === L) g.exs.push(i); else groups.push({ letter:L, exs:[i] }); });
   const steps = [];
   groups.forEach(g => { const rounds = W[g.exs[0]].sets;
@@ -173,8 +325,10 @@ function STEPS(plan) {
   return stepsCache[plan] = steps;
 }
 const fmt = sec => Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
-const fkg = w => (w % 1 ? w.toFixed(1).replace('.',',') : w) + ' kg';
-const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const fnum = w => w % 1 ? String(w).replace('.', ',') : String(w);
+const fkg = w => fnum(w) + ' kg';
+const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const setsLabel = e => e.min ? e.min + '–' + e.sets : String(e.sets);
 
 function tempoHint(t) {
   if (t === 'X!' || t === 'X') return 'maks. dynamicznie';
@@ -187,8 +341,8 @@ function tempoHint(t) {
   return p.join(' · ');
 }
 
-/* ─── sound + vibration ─── */
-let actx;
+/* ─── sound, vibration, screen on ─── */
+let actx, wakeLock = null;
 function tone(freq, delays, vol, dur) {
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
@@ -205,70 +359,148 @@ function tone(freq, delays, vol, dur) {
 }
 const tap = () => { try { navigator.vibrate && navigator.vibrate(40); } catch(e){} tone(660, [0], 0.18, 0.12); };
 const cue = () => { try { navigator.vibrate && navigator.vibrate([180,90,180]); } catch(e){} tone(880, [0,0.22], 0.25, 0.16); };
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch(e){ wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (S.screen === 'workout' || S.screen === 'rest')) keepAwake(true); });
 
-/* ─── data ops ─── */
-function setW(key, v) { store.weights[key] = v; queue.push({ t:'weight', key, w:v, ts:Date.now() }); persist(); flush(); }
-function logWeight(key, w) {
-  if (!(w > 0)) return;
-  const arr = store.wlog[key] || (store.wlog[key] = []);
-  const last = arr[arr.length-1];
-  if (last && last.w === w && Date.now() - last.t < 20*3600000) return;
-  arr.push({ t:Date.now(), w }); store.wlog[key] = arr.slice(-40);
-  queue.push({ t:'wlog', key, w, ts:Date.now() }); persist(); flush();
-}
 function saveWorkout() {
-  const e = { t:Date.now(), plan:S.plan, secs:S.elapsed, sets:STEPS(S.plan).length };
+  const e = { t:Date.now(), plan:S.plan, week:store.week, secs:S.elapsed, sets:S.doneSets };
   store.history.unshift(e); store.history = store.history.slice(0,50);
-  queue.push({ t:'workout', ts:e.t, plan:e.plan, secs:e.secs, sets:e.sets }); persist(); flush();
+  store.dirtyH.push(e.t); persist(); flush();
 }
+
+/* ─── bloki (A, B, C…): jeden ekran na blok ─── */
+const blocksCache = {};
+function BLOCKS(plan) {
+  if (blocksCache[plan]) return blocksCache[plan];
+  const out = [];
+  PLANS[plan].W.forEach((e,i) => { const L = groupOf(e), g = out[out.length-1];
+    if (g && g.letter === L) g.exs.push(i); else out.push({ letter:L, exs:[i] }); });
+  return blocksCache[plan] = out;
+}
+function curBlock() { const B = BLOCKS(S.plan); return { B, blk:B[Math.min(S.blockI, B.length-1)], W:PLANS[S.plan].W }; }
+const blockRest = (blk, W) => W[blk.exs[blk.exs.length-1]].rest || 0;
+/* rekomendowany ciężar: wpis z tego tygodnia (bez rozbicia na serie) albo ostatni tydzień */
+function baseKg(key) {
+  const r = getR(key, store.week);
+  if (r && r.kg != null && !(r.sets && r.sets.length)) return r.kg;
+  const p = prevKg(key, store.week - 1);
+  return p ? p.kg : (r && r.kg != null ? r.kg : null);
+}
+/* ciężar każdej serii: wpisany albo przeniesiony z poprzedniej serii / rekomendowany */
+function setVals(key, n, sets) {
+  const r = getR(key, store.week);
+  sets = sets || (r && r.sets) || [];
+  const out = []; let last = baseKg(key);
+  for (let i = 0; i < n; i++) { if (sets[i] != null) last = sets[i]; out.push(last); }
+  return out;
+}
+function saveSets(key, sets, n) {
+  const vals = setVals(key, n, sets).filter(v => v != null);
+  setR(key, store.week, { sets, kg:vals.length ? Math.max(...vals) : null });
+}
+const exByKey = key => { const [p, code] = key.split('|'); return PLANS[+p].W.find(e => e.code === code); };
 
 /* ─── actions ─── */
 const A = {
+  view(v) { S.view = v; render(); },
   pick(i) { S.plan = i; render(); },
-  start() { S.screen = 'workout'; S.stepI = 0; S.doneSets = 0; S.elapsed = 0; render(); },
-  quit() { S.screen = 'home'; S.stepI = 0; S.doneSets = 0; S.elapsed = 0; S.restLeft = 0; render(); },
+  week(w) { store.week = w; store.dirtyWeek = true; persist(); flush(); render(); },
+  start() { S.screen = 'workout'; S.blockI = 0; S.doneBlocks = 0; S.doneSets = 0; S.elapsed = 0; S.img = null; S.vid = null; S.showW = {}; S.restLeft = 0; keepAwake(true); render(); window.scrollTo(0,0); },
+  quit() { S.screen = 'home'; S.blockI = 0; S.doneBlocks = 0; S.doneSets = 0; S.elapsed = 0; S.restLeft = 0; keepAwake(false); render(); },
   nav(d) {
-    if (d < 0 && S.stepI <= 0 && S.screen !== 'rest') return A.quit();
-    S.stepI = Math.min(STEPS(S.plan).length-1, Math.max(0, S.stepI + d));
-    S.doneSets = S.stepI; S.screen = 'workout'; render();
+    if (d < 0 && S.blockI <= 0) return A.quit();
+    S.blockI = Math.min(BLOCKS(S.plan).length-1, Math.max(0, S.blockI + d));
+    S.img = null; S.vid = null; S.restLeft = 0; render(); window.scrollTo(0,0);
   },
-  inc(key, cur) { setW(key, cur + 2.5); render(); },
-  dec(key, cur) { setW(key, Math.max(0, cur - 2.5)); render(); },
-  addW(key) { setW(key, 2.5); render(); },
+  setBump(key, i, d) {
+    const n = exByKey(key).sets, vals = setVals(key, n), r = getR(key, store.week) || {};
+    const sets = (r.sets || []).slice(); while (sets.length < n) sets.push(null);
+    sets[i] = Math.max(0, Math.round(((vals[i] || 0) + d) * 100) / 100);
+    saveSets(key, sets, n); render();
+  },
+  setType(key, i, v) {
+    const n = exByKey(key).sets, r = getR(key, store.week) || {};
+    const sets = (r.sets || []).slice(); while (sets.length < n) sets.push(null);
+    sets[i] = parseKg(v);
+    saveSets(key, sets, n); render();
+  },
+  addW(key) { S.showW[key] = 1; render(); setTimeout(() => { const el = document.getElementById('kg-' + docId(key) + '-0'); if (el) el.focus(); }, 30); },
+  toggleImg(code) { S.img = S.img === code ? null : code; render(); },
+  toggleVid(key) { S.vid = S.vid === key ? null : key; render(); },
+  pickMedia(key) { S.uploadKey = key; const el = document.getElementById('mediaIn'); if (el) { el.value = ''; el.click(); } },
+  async gotMedia(file) {
+    const key = S.uploadKey;
+    if (!file || !key || !ASSETS || !DB) return;
+    let type = file.type;
+    if (type === 'video/quicktime' || (!type && /\.(mov|mp4)$/i.test(file.name))) type = 'video/mp4';
+    S.uploading = key; S.mediaErr = null; render();
+    try {
+      const r = await ASSETS.upload(file, type && type !== file.type ? { type } : undefined);
+      const kind = String(r.contentType || type).startsWith('image') ? 'image' : 'video';
+      const prev = store.media[key];
+      await DB.doc('media/' + docId(key)).set({ key, id:r.id, type:kind });
+      store.media[key] = { id:r.id, type:kind }; persist(); S.vid = key;
+      if (prev && prev.id && prev.id !== r.id) ASSETS.delete(prev.id).catch(() => {});
+    } catch(e) {
+      const c = e && e.code;
+      S.mediaErr = { key, msg:c === 'too_large' ? 'Plik za duży (max 20 MB). Przytnij nagranie.'
+        : c === 'unsupported_type' ? 'Ten format nie działa. Użyj MP4, WebM albo zdjęcia.'
+        : c === 'quota_or_state' ? 'Brak miejsca na pliki w aplikacji.'
+        : 'Nie udało się wgrać. Spróbuj ponownie.' };
+    }
+    S.uploading = null; render();
+  },
+  rest() {
+    const { blk, W } = curBlock();
+    if (S.restLeft > 0) S.restLeft = 0;
+    else { S.restTotal = blockRest(blk, W); S.restLeft = S.restTotal; tap(); }
+    renderRest();
+  },
   done() {
-    const steps = STEPS(S.plan), step = steps[S.stepI];
-    const ex = PLANS[S.plan].W[step.ex], key = S.plan + '|' + ex.code;
-    const planW = parseFloat(String(ex.weight).replace(',','.')) || 0;
-    const curW = store.weights[key] != null ? store.weights[key] : planW;
-    tap(); logWeight(key, curW);
-    S.doneSets++;
-    if (S.stepI >= steps.length-1) { saveWorkout(); S.screen = 'done'; }
-    else if (!step.rest) { S.stepI++; }
-    else { S.screen = 'rest'; S.restLeft = step.rest; S.restTotal = step.rest; }
-    render();
+    const { B, blk, W } = curBlock();
+    blk.exs.forEach(i => {
+      const key = rkey(S.plan, W[i].code), vals = setVals(key, W[i].sets);
+      if (vals.some(v => v != null)) saveSets(key, vals, W[i].sets);
+      S.doneSets += W[i].sets;
+    });
+    tap(); S.doneBlocks++; S.img = null; S.vid = null; S.restLeft = 0;
+    if (S.blockI >= B.length-1) { saveWorkout(); S.screen = 'done'; keepAwake(false); }
+    else S.blockI++;
+    render(); window.scrollTo(0,0);
   },
-  skipRest() { advance(); render(); }
+  edit(key, w) { S.edit = { key, w }; render(); },
+  closeEdit() { S.edit = null; render(); },
+  editBump(d) { const el = document.getElementById('sheetKg'); const v = parseKg(el.value) || 0; el.value = fnum(Math.max(0, Math.round((v + d) * 100) / 100)); },
+  saveEdit() {
+    const { key, w } = S.edit;
+    const kg = parseKg(document.getElementById('sheetKg').value), old = getR(key, w) || {};
+    const patch = { kg, note:document.getElementById('sheetNote').value.trim() };
+    if (kg !== old.kg) patch.sets = null;
+    setR(key, w, patch);
+    S.edit = null; render();
+  },
+  clearEdit() { const { key, w } = S.edit; const m = store.res[key]; if (m) { delete m[w]; if (!Object.keys(m).length) delete store.res[key]; } markDirty(key); S.edit = null; render(); }
 };
-function advance() {
-  const n = STEPS(S.plan).length;
-  if (S.stepI + 1 >= n) S.screen = 'done';
-  else { S.stepI++; S.screen = 'workout'; }
-}
 
-/* ─── timer ─── */
+/* ─── timer: czas treningu + opcjonalna przerwa ─── */
 setInterval(() => {
-  if (S.screen === 'workout') { S.elapsed++; tick(); }
-  else if (S.screen === 'rest') {
-    S.elapsed++;
-    if (S.restLeft <= 1) { cue(); advance(); render(); }
-    else { S.restLeft--; tick(); }
-  }
-}, 1000);
-function tick() {
+  if (S.screen !== 'workout') return;
+  S.elapsed++;
   const el = document.getElementById('elT'); if (el) el.textContent = fmt(S.elapsed);
-  const rt = document.getElementById('restT'); if (rt) rt.textContent = fmt(S.restLeft);
-  const ring = document.getElementById('ringFg');
-  if (ring) { const C = 2*Math.PI*82; ring.setAttribute('stroke-dashoffset', C * (1 - (S.restTotal ? S.restLeft/S.restTotal : 0))); }
+  if (S.restLeft > 0) { S.restLeft--; if (S.restLeft === 0) cue(); renderRest(); }
+}, 1000);
+function renderRest() {
+  const b = document.getElementById('restBtn'); if (!b) return;
+  const { blk, W } = curBlock();
+  b.classList.toggle('on', S.restLeft > 0);
+  b.innerHTML = S.restLeft > 0
+    ? `Przerwa <span class="mono">${fmt(S.restLeft)}</span> · dotknij, żeby zatrzymać`
+    : `Start przerwy <span class="mono">${fmt(blockRest(blk, W))}</span>`;
 }
 
 /* ─── views ─── */
@@ -277,177 +509,315 @@ function figSvg(type, size, anim) {
   const dim = f.d.map(d => `<path d="${d}" stroke="rgba(255,255,255,0.12)" stroke-width="3" fill="none" stroke-linecap="round"/>`).join('');
   const main = `<g class="${anim ? 'fig-anim' : ''}" stroke="rgba(110,231,183,0.5)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="${f.h[0]}" cy="${f.h[1]}" r="7.5"/>${f.p.map(d => `<path d="${d}"/>`).join('')}</g>`;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 120 120" style="overflow:visible">${dim}${main}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 120 120" style="overflow:visible" aria-hidden="true">${dim}${main}</svg>`;
 }
 
-const syncLabel = () => ({ off:'bez synchronizacji', sync:'synchronizuję…', ok:'zsynchronizowano', err:'offline — w kolejce: ' + queue.length })[syncState];
-const syncColor = () => ({ off:'#55556a', sync:'#fbbf24', ok:'#6ee7b7', err:'#fbbf24' })[syncState];
-function renderSyncDot() {
-  const el = document.getElementById('syncDot');
-  if (el) el.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${syncColor()};display:inline-block"></span> ${syncLabel()}`;
+function weekChips() {
+  return `<div class="weeks"><span class="lbl">Tydzień</span>${WEEKS.map(w =>
+    `<button class="wk ${w===store.week?'on':''}" onclick="A.week(${w})" aria-label="Tydzień ${w}">${w}</button>`).join('')}
+    <button class="wk wk-icon ${S.view==='wyniki'?'on':''}" onclick="A.view(S.view==='wyniki'?'plan':'wyniki')" aria-label="Wyniki" title="Wyniki">
+      <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><rect x="1" y="8" width="3" height="5" rx="1" fill="currentColor"/><rect x="6.5" y="4" width="3" height="9" rx="1" fill="currentColor"/><rect x="12" y="1" width="3" height="12" rx="1" fill="currentColor"/></svg>
+    </button></div>`;
 }
 
 function homeView() {
-  const P = PLANS[S.plan], steps = STEPS(S.plan);
-  const last = store.history.find(e => e.plan === S.plan);
-  const lastLabel = last ? 'Ostatnio: ' + fmt(last.secs) + ' · ' + new Date(last.t).toLocaleDateString('pl-PL',{day:'numeric',month:'short'}) : 'Jeszcze nie wykonany';
-  const blocks = [];
-  P.W.forEach(e => { const L = e.code[0], g = blocks[blocks.length-1];
-    if (g && g.letter === L) g.parts.push(e.name); else blocks.push({ letter:L, parts:[e.name], rounds:e.sets + '×' }); });
   return `
-  <div style="display:flex;flex-direction:column;gap:22px;padding-top:12px;flex:1">
-    <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
-      <span class="pill">Wybierz trening</span>
-      <div class="tabs">${PLANS.map((p,i) =>
-        `<button class="tab ${i===S.plan?'on':''}" onclick="A.pick(${i})"><b>${i+1}</b><i>${p.tag}</i></button>`).join('')}
-      </div>
+  <div style="display:flex;flex-direction:column;gap:18px;padding-top:4px;flex:1">
+    <div class="tabs">${PLANS.map((p,i) =>
+      `<button class="tab ${i===S.plan?'on':''}" onclick="A.pick(${i})"><b>${i+1}</b><i>${esc(p.tag)}</i></button>`).join('')}
     </div>
+    ${weekChips()}
+    ${S.view === 'wyniki' ? wynikiTable() : planCard()}
+    <div id="syncDot" class="mono" style="font-size:10.5px;color:var(--faint);display:flex;align-items:center;gap:7px;justify-content:center" aria-live="polite"></div>
+  </div>
+  ${S.edit ? editSheet() : ''}`;
+}
+
+function planCard() {
+  const P = PLANS[S.plan];
+  return `
     <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:center;gap:14px">
         <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
           <h1 style="font-size:24px;font-weight:900;letter-spacing:-0.5px;line-height:1.1">${esc(P.title)}</h1>
-          <div style="color:#8888a0;font-size:13px">${P.W.length} ćwiczeń · ${steps.length} serii · ok. ${Math.round(steps.length*1.6/5)*5} min</div>
-          <div class="mono" style="font-size:11px;font-weight:700;color:#6ee7b7">${lastLabel}</div>
         </div>
-        <div style="flex-shrink:0">${figSvg(P.hero, 92, true)}</div>
       </div>
       <button class="btn-primary" onclick="A.start()">Rozpocznij trening</button>
+    </div>`;
+}
+
+/* Wyniki: wizualny postęp, liczony z zapisanych treningów (najcięższa seria w tygodniu) */
+function trend(key) {
+  const pts = WEEKS.map(w => { const r = getR(key, w); return r && r.kg != null ? { w, kg:r.kg } : null; }).filter(Boolean);
+  const last = pts[pts.length - 1], prev = pts[pts.length - 2];
+  return { pts, last, d:last && prev ? Math.round((last.kg - prev.kg) * 100) / 100 : null };
+}
+function sparkline(pts) {
+  const Wd = 96, H = 34, px = w => 5 + (w - 1) * (Wd - 10) / 3;
+  const grid = WEEKS.map(w => `<line x1="${px(w)}" y1="3" x2="${px(w)}" y2="${H - 3}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`).join('');
+  if (!pts.length) return `<svg width="${Wd}" height="${H}" viewBox="0 0 ${Wd} ${H}" aria-hidden="true">${grid}</svg>`;
+  const ks = pts.map(p => p.kg), lo = Math.min(...ks), hi = Math.max(...ks);
+  const py = kg => hi === lo ? H / 2 : 5 + (hi - kg) * (H - 10) / (hi - lo);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + px(p.w).toFixed(1) + ' ' + py(p.kg).toFixed(1)).join(' ');
+  const last = pts[pts.length - 1];
+  const area = pts.length > 1 ? `<path d="${line} L${px(last.w).toFixed(1)} ${H - 3} L${px(pts[0].w).toFixed(1)} ${H - 3} Z" fill="rgba(110,231,183,0.12)"/>` : '';
+  const dots = pts.map((p, i) => i === pts.length - 1
+    ? `<circle cx="${px(p.w)}" cy="${py(p.kg)}" r="3.5" fill="#6ee7b7"/>`
+    : `<circle cx="${px(p.w)}" cy="${py(p.kg)}" r="2" fill="#13131a" stroke="#6ee7b7" stroke-width="1.5"/>`).join('');
+  return `<svg width="${Wd}" height="${H}" viewBox="0 0 ${Wd} ${H}" aria-hidden="true">${grid}${area}${pts.length > 1 ? `<path d="${line}" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` : ''}${dots}</svg>`;
+}
+function deltaBadge(d) {
+  if (d == null) return '';
+  if (d > 0) return `<span class="delta" style="color:var(--mint)">▲ +${fnum(d)}</span>`;
+  if (d < 0) return `<span class="delta" style="color:var(--amber)">▼ −${fnum(-d)}</span>`;
+  return `<span class="delta" style="color:var(--faint)">= bez zmian</span>`;
+}
+
+/* prosta tabela wyników: najcięższa seria w każdym tygodniu */
+function wynikiTable() {
+  const P = PLANS[S.plan];
+  const rows = P.W.filter(e => e.load);
+  return `
+    <div class="card" style="padding:12px 0 10px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 12px 2px 14px">
+        <span class="lbl">Wyniki · ${esc(P.title)}</span>
+        <button class="nav" style="width:32px;height:32px;font-size:14px" onclick="A.view('plan')" aria-label="Zamknij wyniki">✕</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="res">
+          <thead><tr><th>Ćwiczenie · tydzień</th>${WEEKS.map(w => `<th class="${w === store.week ? 'cur' : ''}">${w}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(e => {
+            const key = rkey(S.plan, e.code); let prev = null;
+            const d = trend(key).d;
+            const ti = d == null ? '<span class="ti" aria-hidden="true"></span>'
+              : d > 0 ? '<span class="ti" style="color:var(--mint)" title="Postęp" aria-label="postęp">↗</span>'
+              : d < 0 ? '<span class="ti" style="color:var(--amber)" title="Spadek" aria-label="spadek">↘</span>'
+              : '<span class="ti" style="color:var(--muted)" title="Bez zmian" aria-label="bez zmian">→</span>';
+            return `<tr><td class="ex"><span class="exrow"><span class="c">${e.code}</span>${ti}<span>${esc(e.name)}</span></span></td>${WEEKS.map(w => {
+              const r = getR(key, w), kg = r && r.kg != null ? r.kg : null;
+              let col = 'var(--fg)';
+              if (kg != null && prev != null) col = kg > prev ? 'var(--mint)' : kg < prev ? 'var(--amber)' : 'var(--fg)';
+              if (kg != null) prev = kg;
+              return `<td class="rv mono" style="color:${col}">${kg != null ? fnum(kg) : '<span style="color:#34344a">–</span>'}</td>`;
+            }).join('')}</tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--faint);padding:2px 14px 0">kg, najcięższa seria w tygodniu · <span style="color:var(--mint)">↗</span> postęp · <span style="color:var(--muted)">→</span> bez zmian · <span style="color:var(--amber)">↘</span> spadek</div>
+    </div>`;
+}
+
+function wynikiCard() {
+  const P = PLANS[S.plan];
+  const rows = P.W.filter(e => e.load).map(e => ({ e, key:rkey(S.plan, e.code), t:trend(rkey(S.plan, e.code)) }));
+  const cmp = rows.filter(r => r.t.d != null);
+  const up = cmp.filter(r => r.t.d > 0).length, same = cmp.filter(r => r.t.d === 0).length, down = cmp.filter(r => r.t.d < 0).length;
+  return `
+    <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <span class="lbl">Postęp · ${esc(P.title)}</span>
+      ${cmp.length ? `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div class="stat"><div class="k">W górę</div><div class="v" style="color:var(--mint)">${up}</div></div>
+        <div class="stat"><div class="k">Bez zmian</div><div class="v">${same}</div></div>
+        <div class="stat"><div class="k">W dół</div><div class="v" style="color:${down ? 'var(--amber)' : 'var(--fg)'}">${down}</div></div>
+      </div>` : `<div style="font-size:13px;color:var(--muted)">Postęp pokaże się, gdy zapiszesz trening w drugim tygodniu.</div>`}
     </div>
-    <div class="card" style="flex:1;padding:10px 18px;display:flex;flex-direction:column">
-      <div class="lbl" style="padding:6px 0 8px">Przebieg</div>
-      ${blocks.map(b => `
-      <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,0.05)">
-        <span class="mono" style="font-size:11px;font-weight:700;color:#6ee7b7;background:rgba(110,231,183,0.12);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${b.letter}</span>
-        <span style="flex:1;font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.parts.join(' + '))}</span>
-        <span class="mono" style="font-size:11.5px;color:#55556a;flex-shrink:0">${b.rounds}</span>
-      </div>`).join('')}
+    <div class="card" style="padding:4px 0;display:flex;flex-direction:column">
+      ${rows.map(({ e, key, t }) => `
+      <button class="prow" onclick="A.edit('${key}',${t.last ? t.last.w : store.week})" aria-label="${esc(e.name)}: popraw wpis">
+        <span class="c mono">${e.code}</span>
+        <span class="pn">${esc(e.name)}<small>${t.pts.length ? t.pts.map(p => fnum(p.kg)).join(' → ') + ' kg' : 'brak wpisów'}</small></span>
+        ${sparkline(t.pts)}
+        <span class="pv mono">${t.last ? fnum(t.last.kg) + '<small>kg</small>' : '—'}${deltaBadge(t.d)}</span>
+      </button>`).join('')}
     </div>
-    <div id="syncDot" class="mono" style="font-size:10.5px;color:#55556a;display:flex;align-items:center;gap:7px;justify-content:center"></div>
+    <div style="font-size:11.5px;color:var(--faint);text-align:center">Wyniki zapisują się same po „Serie zrobione”. Dotknij ćwiczenia, żeby poprawić wpis.</div>`;
+}
+
+function editSheet() {
+  const { key, w } = S.edit;
+  const [p, code] = key.split('|');
+  const ex = PLANS[+p].W.find(e => e.code === code);
+  const r = getR(key, w) || {};
+  const prev = prevKg(key, w - 1);
+  return `
+  <div class="scrim" onclick="A.closeEdit()"></div>
+  <div class="sheet" role="dialog" aria-label="Wynik: ${esc(ex.name)}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <span class="lbl">Tydzień ${w} · ${ex.code}</span>
+        <h3 style="font-size:19px;font-weight:800;line-height:1.2;text-wrap:balance">${esc(ex.name)}</h3>
+        <span style="font-size:12px;color:var(--muted)">${ex.sets} × ${esc(ex.reps)}${prev ? ' · tydz. ' + prev.week + ': ' + fkg(prev.kg) : ''}</span>
+        ${r.sets ? `<span style="font-size:12px;color:var(--mint)" class="mono">Serie: ${r.sets.filter(v => v != null).map(fnum).join(' · ')} kg</span>` : ''}
+      </div>
+      <button class="nav" style="flex-shrink:0;width:36px;height:36px;font-size:16px" onclick="A.closeEdit()" aria-label="Zamknij">✕</button>
+    </div>
+    <div class="wbox" style="flex-direction:row;align-items:center;justify-content:space-between">
+      <label for="sheetKg" class="lbl" style="font-size:10px;letter-spacing:1px">Ciężar (kg)</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="stepbtn minus" onclick="A.editBump(-2.5)" aria-label="Minus 2,5 kg">−</button>
+        <input id="sheetKg" class="kgin" inputmode="decimal" autocomplete="off" value="${r.kg != null ? fnum(r.kg) : ''}" placeholder="—">
+        <button class="stepbtn plus" onclick="A.editBump(2.5)" aria-label="Plus 2,5 kg">+</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label for="sheetNote" class="lbl" style="font-size:10px;letter-spacing:1px">Notatka</label>
+      <textarea id="sheetNote" class="notein" placeholder="np. ze sztangą, technika do poprawy">${esc(r.note || '')}</textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-ghost" style="flex:1;padding:14px" onclick="A.clearEdit()">Wyczyść</button>
+      <button class="btn-primary" style="flex:2;padding:14px" onclick="A.saveEdit()">Zapisz</button>
+    </div>
   </div>`;
 }
 
-function activeChrome(inner) {
-  const steps = STEPS(S.plan), W = PLANS[S.plan].W;
-  const step = steps[Math.min(S.stepI, steps.length-1)], ex = W[step.ex];
-  const letters = [...new Set(W.map(e => e.code[0]))];
-  const counter = String(letters.indexOf(ex.code[0])+1).padStart(2,'0') + ' / ' + String(letters.length).padStart(2,'0');
-  const pct = Math.round(S.doneSets / steps.length * 100);
+/* tempo jako ikonka: ↓ w dół, ⏸ pauza, ↑ w górę, ⚡ dynamicznie */
+function tempoBadge(t) {
+  if (!t) return '';
+  const clock = `<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.2V6l2 1.3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  let body = esc(t), title = 'Tempo: ' + esc(t);
+  if (t === 'X!' || t === 'X') { body = '⚡ X!'; title = 'Tempo X!: maksymalnie dynamicznie'; }
+  else if (/^[0-9X!]{4}$/.test(t)) {
+    const c = t.split(''), v = x => (x === 'X' || x === '!') ? '⚡' : x + 's';
+    const seg = ['↓' + v(c[0])];
+    if (c[1] !== '0') seg.push('⏸' + v(c[1]));
+    seg.push('↑' + v(c[2]));
+    if (c[3] !== '0') seg.push('⏸' + v(c[3]));
+    body = seg.join(' ');
+    title = 'Tempo ' + t + ': ' + tempoHint(t);
+  }
+  return `<span class="tbadge" title="${title}">${clock}<span>${body}</span></span>`;
+}
+
+/* RPE jako ikonka: słupki = intensywność, liczba, ile powtórzeń w zapasie */
+function rpeBadge(rpe) {
+  const nums = String(rpe).split('/').map(Number).filter(n => n >= 1 && n <= 10);
+  if (!nums.length) return `<span class="meta">RPE ${esc(rpe)}</span>`;
+  const hi = Math.max(...nums), lo = Math.min(...nums);
+  const lv = Math.max(1, Math.min(4, hi - 6));
+  const rir = hi === 10 && lo === 10 ? 'do upadku' : (hi === lo ? (10 - hi) : (10 - hi) + '–' + (10 - lo)) + ' w zapasie';
+  const bars = [0,1,2,3].map(i => `<rect x="${i * 3.5}" y="${9 - i * 3}" width="2.5" height="${3 + i * 3}" rx="1" fill="${i < lv ? 'currentColor' : 'rgba(255,255,255,0.15)'}"/>`).join('');
+  return `<span class="rpe lv${lv}" title="RPE ${esc(rpe)}: wysiłek w skali 1–10, ${rir}"><svg width="13" height="12" viewBox="0 0 13 12" aria-hidden="true">${bars}</svg><b>${esc(rpe)}</b><span>${rir}</span></span>`;
+}
+
+function mediaChips(ex, key) {
+  const media = store.media[key], out = [];
+  if (ex.img) out.push(`<button class="chip ${S.img === ex.code ? 'on' : ''}" onclick="A.toggleImg('${ex.code}')">${S.img === ex.code ? 'Ukryj zdjęcie' : 'Zdjęcie'}</button>`);
+  if (media) out.push(`<button class="chip ${S.vid === key ? 'on' : ''}" onclick="A.toggleVid('${key}')">${S.vid === key ? 'Ukryj wideo' : (media.type === 'image' ? 'Twoje zdjęcie' : '▶ Wideo')}</button>`);
+  else if (ex.video) out.push(`<a class="chip" href="${esc(ex.video)}" target="_blank" rel="noopener">▶ YouTube</a>`);
+  return out.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap">${out.join('')}</div>` : '';
+}
+
+function exCard(ex) {
+  const key = rkey(S.plan, ex.code);
+  const media = store.media[key];
+  const base = baseKg(key);
+  const vals = setVals(key, ex.sets);
+  const hasW = ex.load || vals.some(v => v != null) || S.showW[key];
+  const prev = prevKg(key, store.week - 1);
+  const hint = prev ? 'tydz. ' + prev.week + ': ' + fkg(prev.kg) : (base == null ? 'wpisz ciężar' : '');
   return `
-  <div style="display:flex;flex-direction:column;flex:1">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <button class="nav" onclick="A.nav(-1)">‹</button>
-      <span class="mono" style="font-size:13px;font-weight:700;letter-spacing:2px;color:#8888a0">${counter}</span>
-      <button class="nav ${S.stepI >= steps.length-1 ? 'off' : ''}" onclick="A.nav(1)">›</button>
-    </div>
-    <div class="progress" style="margin-bottom:6px"><div style="width:${pct}%"></div></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span id="elT" class="mono" style="font-size:11px;font-weight:700;color:#6ee7b7">${fmt(S.elapsed)}</span>
-      <span class="mono" style="font-size:10.5px;font-weight:600;color:#55556a">${pct}% · ${S.doneSets}/${steps.length} serii</span>
-    </div>
-    ${inner}
-  </div>`;
+    <div class="card exc">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span class="code mono">${ex.code}</span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+          <h2 class="exn">${esc(ex.name)}</h2>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${hasW ? '' : `<span class="meta"><b>${setsLabel(ex)} × ${esc(ex.reps)}</b></span>`}${tempoBadge(ex.tempo)}${ex.rpe ? rpeBadge(ex.rpe) : ''}</div>
+          ${ex.note ? `<div class="hint">${esc(ex.note)}</div>` : ''}
+        </div>
+      </div>
+      ${mediaChips(ex, key)}
+      ${S.img === ex.code && ex.img ? `<img class="photo" src="img/${ex.img}" alt="${esc(ex.name)}">` : ''}
+      ${S.vid === key && media ? (media.type === 'image'
+        ? `<img class="photo" src="/_blob/${media.id}" alt="${esc(ex.name)}">`
+        : `<video class="photo" src="/_blob/${media.id}" controls playsinline loop muted autoplay></video>`) : ''}
+      ${S.mediaErr && S.mediaErr.key === key ? `<div style="font-size:12px;color:var(--amber)">${esc(S.mediaErr.msg)}</div>` : ''}
+      ${hasW ? `
+      <div class="sets">
+        <div class="sets-h">
+          <span class="lbl" style="font-size:10px;letter-spacing:1px">Rekomendowany ciężar</span>
+          <span style="font-size:11px;color:var(--muted)">${hint}</span>
+        </div>
+        ${vals.map((v, i) => {
+          const id = 'kg-' + docId(key) + '-' + i;
+          const opt = ex.min && i >= ex.min;
+          return `<div class="srow">
+            <label for="${id}" class="sn">Seria ${i + 1}${opt ? ' <span style="color:var(--faint)">(opc.)</span>' : ''}<small>× ${esc(ex.reps)}</small></label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="stepbtn minus" onclick="A.setBump('${key}',${i},-2.5)" aria-label="Seria ${i + 1}: minus 2,5 kg">−</button>
+              <input id="${id}" class="kgin" inputmode="decimal" autocomplete="off" value="${v != null ? fnum(v) : ''}" placeholder="—" onchange="A.setType('${key}',${i},this.value)" aria-label="Seria ${i + 1}, ciężar w kg"><span class="unit" aria-hidden="true">kg</span>
+              <button class="stepbtn plus" onclick="A.setBump('${key}',${i},2.5)" aria-label="Seria ${i + 1}: plus 2,5 kg">+</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+    </div>`;
 }
 
 function workoutView() {
-  const steps = STEPS(S.plan), W = PLANS[S.plan].W;
-  const step = steps[S.stepI], ex = W[step.ex];
-  const key = S.plan + '|' + ex.code;
-  const planW = parseFloat(String(ex.weight).replace(',','.')) || 0;
-  const curW = store.weights[key] != null ? store.weights[key] : planW;
-  const hasW = planW > 0 || store.weights[key] != null;
-  const arr = store.wlog[key] || [];
-  const prev = [...arr].reverse().find(x => Date.now() - x.t > 20*3600000);
-  const wHint = prev ? 'poprzednio: ' + fkg(prev.w) : (planW > 0 ? 'wg planu: ' + fkg(planW) : 'pierwszy raz');
-  const nxt = steps[S.stepI+1];
-  const nextLabel = nxt ? esc(W[nxt.ex].name) + (W[nxt.ex].sets > 1 ? ' — seria ' + nxt.set + ' z ' + W[nxt.ex].sets : '') : 'Koniec treningu';
-  const th = tempoHint(ex.tempo);
-  return activeChrome(`
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;text-align:center;padding:12px 0">
-      <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
-        <span class="mono" style="font-size:11px;font-weight:700;color:#6ee7b7;background:rgba(110,231,183,0.12);padding:4px 12px;border-radius:50px;letter-spacing:1px">${ex.code}</span>
-        <h2 style="font-size:27px;font-weight:800;letter-spacing:-0.3px;line-height:1.15;text-wrap:balance">${esc(ex.name)}</h2>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
-        <span class="lbl" style="letter-spacing:3px">Seria</span>
-        <div class="mono" style="font-weight:700;font-size:64px;line-height:1;color:#6ee7b7">${step.set}<span style="color:#55556a;font-size:30px;font-weight:600"> / ${ex.sets}</span></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:340px">
-        ${hasW ? `
-        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:10px 14px;width:100%">
-          <div style="text-align:left">
-            <div class="lbl" style="font-size:10px;letter-spacing:1px">Ciężar</div>
-            <div style="font-size:11px;color:#8888a0;margin-top:2px">${wHint}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <button class="stepbtn" style="background:#1e1e2a;border:1px solid rgba(255,255,255,0.08);color:#8888a0" onclick="A.dec('${key}',${curW})">−</button>
-            <span class="mono" style="font-size:17px;font-weight:700;color:#6ee7b7;min-width:72px;text-align:center">${curW > 0 ? fkg(curW) : '—'}</span>
-            <button class="stepbtn" style="background:rgba(110,231,183,0.1);border:1px solid rgba(110,231,183,0.3);color:#6ee7b7" onclick="A.inc('${key}',${curW})">+</button>
-          </div>
-        </div>` : ''}
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:100%">
-          <div class="stat"><div class="k">Powtórzenia</div><div class="v" style="color:#6ee7b7">${esc(ex.reps)}</div></div>
-          <div class="stat"><div class="k">Tempo</div><div class="v">${esc(ex.tempo)}</div>${th ? `<div style="font-size:10px;color:#55556a;margin-top:3px">${th}</div>` : ''}</div>
-        </div>
-        ${!hasW ? `<button style="background:transparent;border:none;color:#55556a;font-size:12.5px;font-weight:600;padding:2px" onclick="A.addW('${key}')">+ Dodaj obciążenie</button>` : ''}
+  const { B, blk, W } = curBlock();
+  const L = blk.letter;
+  const regular = B.filter(b => !BLOCK_NAME[b.letter]);
+  const counter = BLOCK_NAME[L] ? BLOCK_NAME[L] : 'Blok ' + L + ' · ' + (regular.indexOf(blk) + 1) + ' / ' + regular.length;
+  const pct = Math.round((S.blockI + 1) / B.length * 100);
+  return `
+  <div style="display:flex;flex-direction:column;flex:1;gap:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <button class="nav" onclick="A.nav(-1)" aria-label="Wstecz">‹</button>
+      <span class="mono" style="font-size:12px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;text-align:center">${esc(counter)} · tydz. ${store.week}</span>
+      <button class="nav ${S.blockI >= B.length-1 ? 'off' : ''}" onclick="A.nav(1)" aria-label="Dalej">›</button>
+    </div>
+    <div>
+      <div class="progress" style="margin-bottom:6px"><div style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span id="elT" class="mono" style="font-size:11px;font-weight:700;color:var(--mint)">${fmt(S.elapsed)}</span>
       </div>
     </div>
-    <button class="btn-main" onclick="A.done()">Seria ukończona</button>
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;min-height:18px">
-      <span class="lbl" style="font-size:11px;letter-spacing:1.5px">Następnie</span>
-      <span style="font-size:13px;font-weight:600;color:#8888a0">${nextLabel}</span>
-    </div>`);
-}
-
-function restView() {
-  const steps = STEPS(S.plan), W = PLANS[S.plan].W;
-  const nxt = steps[S.stepI+1];
-  const nextLabel = nxt ? esc(W[nxt.ex].name) + (W[nxt.ex].sets > 1 ? ' — seria ' + nxt.set + ' z ' + W[nxt.ex].sets : '') : 'Koniec treningu';
-  const C = 2*Math.PI*82, off = C * (1 - (S.restTotal ? S.restLeft/S.restTotal : 0));
-  return activeChrome(`
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center">
-      <span class="lbl" style="font-size:12px;letter-spacing:4px;animation:restPulse 2.4s ease-in-out infinite">Odpoczynek</span>
-      <div style="position:relative;width:180px;height:180px;display:flex;align-items:center;justify-content:center">
-        <svg width="180" height="180" viewBox="0 0 180 180" style="transform:rotate(-90deg)">
-          <circle cx="90" cy="90" r="82" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
-          <circle id="ringFg" cx="90" cy="90" r="82" fill="none" stroke="#6ee7b7" stroke-width="7" stroke-linecap="round"
-            stroke-dasharray="${C}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset 1s linear"/>
-        </svg>
-        <span id="restT" class="mono" style="position:absolute;font-size:40px;font-weight:700;color:#6ee7b7">${fmt(S.restLeft)}</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <span class="lbl" style="font-size:11px;letter-spacing:1.5px">Następnie</span>
-        <span style="font-size:16px;font-weight:700">${nextLabel}</span>
-      </div>
-    </div>
-    <button class="btn-ghost" onclick="A.skipRest()">Pomiń odpoczynek</button>`);
+    ${blk.exs.map(i => exCard(W[i])).join('')}
+    <div style="flex:1"></div>
+    <button class="btn-main" onclick="A.done()">Serie zrobione</button>
+  </div>`;
 }
 
 function doneView() {
+  const P = PLANS[S.plan];
+  const logged = P.W.filter(e => !e.block && getR(rkey(S.plan, e.code), store.week)?.kg != null).length;
   return `
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center;padding:12px 0">
-    <div style="width:88px;height:88px;border-radius:50%;background:rgba(110,231,183,0.12);border:1px solid rgba(110,231,183,0.3);display:flex;align-items:center;justify-content:center;font-size:38px;color:#6ee7b7;box-shadow:0 0 50px rgba(110,231,183,0.2)">✓</div>
+    <div style="width:88px;height:88px;border-radius:50%;background:var(--mint-bg);border:1px solid var(--mint-line);display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--mint);box-shadow:0 0 50px rgba(110,231,183,0.2)">✓</div>
     <div style="display:flex;flex-direction:column;gap:6px">
       <h2 style="font-size:28px;font-weight:900;letter-spacing:-0.4px">Trening ukończony</h2>
-      <span style="color:#8888a0;font-size:14.5px">Dobra robota. Spokojnie się rozciągnij.</span>
+      <span style="color:var(--muted);font-size:14.5px">Dobra robota. Spokojnie się rozciągnij.</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;width:100%;max-width:340px">
-      <div style="background:#1e1e2a;padding:18px 8px"><div class="mono" style="font-size:20px;font-weight:800;color:#6ee7b7">${fmt(S.elapsed)}</div><div class="lbl" style="font-size:10px;letter-spacing:1px;margin-top:4px">Czas</div></div>
-      <div style="background:#1e1e2a;padding:18px 8px"><div class="mono" style="font-size:20px;font-weight:800;color:#6ee7b7">${S.doneSets}</div><div class="lbl" style="font-size:10px;letter-spacing:1px;margin-top:4px">Serie</div></div>
-      <div style="background:#1e1e2a;padding:18px 8px"><div class="mono" style="font-size:20px;font-weight:800;color:#6ee7b7">${PLANS[S.plan].W.length}</div><div class="lbl" style="font-size:10px;letter-spacing:1px;margin-top:4px">Ćwiczenia</div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:14px;overflow:hidden;width:100%;max-width:340px">
+      <div style="background:var(--raise);padding:18px 8px"><div class="mono" style="font-size:20px;font-weight:800;color:var(--mint)">${fmt(S.elapsed)}</div><div class="lbl" style="font-size:10px;letter-spacing:1px;margin-top:4px">Czas</div></div>
+      <div style="background:var(--raise);padding:18px 8px"><div class="mono" style="font-size:20px;font-weight:800;color:var(--mint)">${S.doneSets}</div><div class="lbl" style="font-size:10px;letter-spacing:1px;margin-top:4px">Serie</div></div>
+      <div style="background:var(--raise);padding:18px 8px"><div class="mono" style="font-size:20px;font-weight:800;color:var(--mint)">${logged}</div><div class="lbl" style="font-size:10px;letter-spacing:1px;margin-top:4px">Ciężary</div></div>
     </div>
-    <button class="btn-ghost" style="max-width:340px" onclick="A.quit()">Wróć do startu</button>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px">
+      <button class="btn-primary" onclick="A.quit()">Wróć do startu</button>
+    </div>
   </div>`;
 }
 
 function render() {
   const root = document.getElementById('root');
-  root.innerHTML = S.screen === 'home' ? homeView() : S.screen === 'workout' ? workoutView() : S.screen === 'rest' ? restView() : doneView();
+  root.innerHTML = S.screen === 'home' ? homeView() : S.screen === 'workout' ? workoutView() : doneView();
+  renderRest();
+  if (S.edit) { const el = document.getElementById('sheetKg'); if (el && !el.value) el.focus(); }
   renderSyncDot();
 }
+const SYNC_LABEL = { local:'zapisano na tym urządzeniu', sync:'synchronizuję…', ok:'zsynchronizowano', offline:'offline, zapisane lokalnie', full:'baza pełna, zapisane lokalnie' };
+const SYNC_COLOR = { local:'var(--faint)', sync:'var(--amber)', ok:'var(--mint)', offline:'var(--amber)', full:'var(--amber)' };
+function renderSyncDot() {
+  const el = document.getElementById('syncDot');
+  if (el) el.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${SYNC_COLOR[syncState]};display:inline-block"></span> ${SYNC_LABEL[syncState]}`;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.edit) A.closeEdit(); });
 
 render();
-pull().then(flush);
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+connect();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>
